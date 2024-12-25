@@ -14,6 +14,18 @@ all: test build
 build:
 	$(GOBUILD) -o bin/$(BINARY_NAME) -v
 
+# Build for linux
+build-linux:
+	GOOS=linux GOARCH=amd64 $(GOBUILD) -o bin/$(BINARY_NAME) -v
+
+# Build for windows
+build-windows:
+	GOOS=windows GOARCH=amd64 $(GOBUILD) -o bin/$(BINARY_NAME).exe -v
+
+# Build for darwin
+build-darwin:
+	GOOS=darwin GOARCH=amd64 $(GOBUILD) -o bin/$(BINARY_NAME)-darwin -v
+
 # Run tests
 test: 
 	$(GOTEST) -v ./...
@@ -21,7 +33,7 @@ test:
 # Clean the build files
 clean: 
 	$(GOCLEAN)
-	rm -f bin/$(BINARY_NAME)
+	rm -f bin/*
 
 # Go mod tidy
 mod-tidy: 
