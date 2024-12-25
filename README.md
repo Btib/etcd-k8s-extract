@@ -19,6 +19,16 @@ Running this tool will result in something like this:
 │   │       └── 5-2233.yaml
 ```
 
+This tool is really useful if you have kubernetes running in a remote area where you can't debug easily or only have a etcd backup for a cluster. No need for a running etcd or any extra tooling, just the etcd data-directory/db-file and this tool and you are good to go. 
+
+## Installing
+
+If you have go already setup:
+
+```sh
+go install github.com/zawachte/etcd-k8s-extract@latest
+```
+
 ## Building 
 
 ```sh
