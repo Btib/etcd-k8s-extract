@@ -46,23 +46,6 @@ func WriteResourceToFile(kuberegistryPath string, data []byte, ret mvccpb.KeyVal
 	return nil
 }
 
-func DecodeAndWrite(kuberegistryPath string, ret mvccpb.KeyValue, codec runtime.Serializer, into runtime.Object) error {
-	_, _, err := codec.Decode(ret.Value, nil, into)
-	if err != nil {
-		return err
-	}
-	yamlData, err := yaml.Marshal(into)
-	if err != nil {
-		return err
-	}
-
-	err = WriteResourceToFile(kuberegistryPath, yamlData, ret)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func snapDir(dataDir string) string {
 	return filepath.Join(dataDir, "member", "snap")
 }
@@ -100,9 +83,19 @@ func decodeAndWrite(kuberegistryPath string, k, v []byte) error {
 		return WriteResourceToFile(kuberegistryPath, yamlData, kv)
 	}
 
-	err = DecodeAndWrite(kuberegistryPath, kv, codec, kindToObject(obj.Kind))
+	intoObject := kindToObject(obj.Kind)
+	_, _, err = codec.Decode(kv.Value, nil, intoObject)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to decode protobuf data into runtime object: %w\n", err)
+	}
+	yamlData, err := yaml.Marshal(intoObject)
+	if err != nil {
+		return fmt.Errorf("failed to marshal runtime object into yaml: %w\n", err)
+	}
+
+	err = WriteResourceToFile(kuberegistryPath, yamlData, kv)
+	if err != nil {
+		return fmt.Errorf("failed to write protobuf resource to file: %w\n", err)
 	}
 
 	return nil
