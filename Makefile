@@ -8,7 +8,7 @@ BINARY_NAME=etcd-k8s-extract
 DB_FILE=./data
 
 # All target
-all: test build
+all: test build-linux build-windows build-darwin
 
 # Build the project
 build:
