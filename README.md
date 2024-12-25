@@ -1,9 +1,14 @@
 # etcd-k8s-extract
 
-etcd-k8s-extract takes in an etcd data directory or db file used in kubernetes, extracts the kubernetes resources and then writes the resources to disk in yaml format.
+**etcd-k8s-extract** is a tool that processes an etcd data directory or database file used in Kubernetes, extracts Kubernetes resources, and writes them to disk in YAML format.
 
-Running this tool will result in something like this:
-```sh
+This tool is especially helpful when debugging Kubernetes clusters in environments where you have limited access, or when you only have an etcd backup available. It requires no running etcd instance or additional tooling—just the etcd data directory or database file and this tool.
+
+## Output Example
+
+When you run **etcd-k8s-extract**, it organizes the extracted resources into directories based on their types and namespaces, like this:
+
+```plaintext
 ├── pods
 │   ├── capd-system
 │   │   └── capd-controller-manager-7dfb5f78df-bcz44
@@ -19,40 +24,77 @@ Running this tool will result in something like this:
 │   │       └── 5-2233.yaml
 ```
 
-This tool is really useful if you have kubernetes running in a remote area where you can't debug easily or only have a etcd backup for a cluster. No need for a running etcd or any extra tooling, just the etcd data-directory/db-file and this tool and you are good to go. 
+## Why Use etcd-k8s-extract?
 
-## Installing
+- Debug Kubernetes clusters in restricted or remote environments.
+- Analyze Kubernetes configurations when only an etcd backup is available.
+- Operate independently of a running etcd instance or Kubernetes control plane.
+
+---
+
+## Installation
+
+### Download Binary
+
+You can download the latest release:
 
 ```sh
 curl -L https://github.com/zawachte/etcd-k8s-extract/releases/download/v0.0.2/etcd-k8s-extract -o etcd-k8s-extract
 ```
 
-If you have go already setup:
+### Install via Go
+
+If you already have Go installed:
 
 ```sh
 go install github.com/zawachte/etcd-k8s-extract@latest
 ```
 
-## Building 
+---
+
+## Building from Source
+
+If you want to build the tool yourself:
 
 ```sh
 make build
 ```
 
-## Running
+---
 
-### With an etcd data directory:
+## Usage
+
+### Extract from an etcd Data Directory
+
+```sh
+./bin/etcd-k8s-extract <path-to-etcd-data-directory>
+```
+
+Example:
+
 ```sh
 ./bin/etcd-k8s-extract testetcd/etcd
 ```
 
-### With an etcd database file
+### Extract from an etcd Database File
 
 ```sh
-./bin/etcd-k8s-extract testetcd/etcd/member/snap/db
+./etcd-k8s-extract <path-to-etcd-database-file>
 ```
 
-### With a custom output path
+Example:
+
+```sh
+./etcd-k8s-extract testetcd/etcd/member/snap/db
+```
+
+### Specify a Custom Output Path
+
+```sh
+./etcd-k8s-extract <source> --output-path <custom-output-directory>
+```
+
+Example:
 
 ```sh
 ./bin/etcd-k8s-extract testetcd/etcd --output-path customdir
