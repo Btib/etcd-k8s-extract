@@ -67,13 +67,13 @@ make build
 ### Extract from an etcd Data Directory
 
 ```sh
-./bin/etcd-k8s-extract <path-to-etcd-data-directory>
+./etcd-k8s-extract <path-to-etcd-data-directory>
 ```
 
 Example:
 
 ```sh
-./bin/etcd-k8s-extract testetcd/etcd
+./etcd-k8s-extract testetcd/etcd
 ```
 
 ### Extract from an etcd Database File
@@ -97,5 +97,5 @@ Example:
 Example:
 
 ```sh
-./bin/etcd-k8s-extract testetcd/etcd --output-path customdir
+./etcd-k8s-extract testetcd/etcd --output-path customdir
 ```
