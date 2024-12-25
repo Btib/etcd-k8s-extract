@@ -23,6 +23,10 @@ This tool is really useful if you have kubernetes running in a remote area where
 
 ## Installing
 
+```sh
+curl -L https://github.com/zawachte/etcd-k8s-extract/releases/download/v0.0.2/etcd-k8s-extract -o etcd-k8s-extract
+```
+
 If you have go already setup:
 
 ```sh
