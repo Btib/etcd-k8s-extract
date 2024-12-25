@@ -22,7 +22,7 @@ Running this tool will result in something like this:
 ## Building 
 
 ```sh
-make build-linux
+make build
 ```
 
 ## Running
