@@ -12,17 +12,21 @@ import (
 
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	appsv1beta2 "k8s.io/api/apps/v1beta2"
+
 	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
-	flowcontrolv1 "k8s.io/api/flowcontrol/v1beta1"
+	flowcontrolv1 "k8s.io/api/flowcontrol/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	storagev1 "k8s.io/api/storage/v1"
 
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"go.etcd.io/etcd/api/v3/mvccpb"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer/protobuf"
 	"k8s.io/kubectl/pkg/scheme"
 
@@ -83,7 +87,11 @@ func decodeAndWrite(kuberegistryPath string, k, v []byte) error {
 		return WriteResourceToFile(kuberegistryPath, yamlData, kv)
 	}
 
-	intoObject := kindToObject(obj.Kind)
+	intoObject, err := kindToObject(obj.GroupVersionKind())
+	if err != nil {
+		return fmt.Errorf("failed to get runtime object from gvk %s: %w\n", obj.GroupVersionKind().String(), err)
+	}
+
 	_, _, err = codec.Decode(kv.Value, nil, intoObject)
 	if err != nil {
 		return fmt.Errorf("failed to decode protobuf data into runtime object: %w\n", err)
@@ -100,86 +108,241 @@ func decodeAndWrite(kuberegistryPath string, k, v []byte) error {
 
 	return nil
 }
-
-func kindToObject(kind string) runtime.Object {
-	switch kind {
+func kindToObjectCore(gvk schema.GroupVersionKind) (runtime.Object, error) {
+	switch gvk.Kind {
 	case "Binding":
-		return &corev1.Binding{}
+		if gvk.Version == "v1" {
+			return &corev1.Binding{}, nil
+		}
 	case "ComponentStatus":
-		return &corev1.ComponentStatus{}
+		if gvk.Version == "v1" {
+			return &corev1.ComponentStatus{}, nil
+		}
 	case "ConfigMap":
-		return &corev1.ConfigMap{}
+		if gvk.Version == "v1" {
+			return &corev1.ConfigMap{}, nil
+		}
 	case "Endpoints":
-		return &corev1.Endpoints{}
+		if gvk.Version == "v1" {
+			return &corev1.Endpoints{}, nil
+		}
 	case "Event":
-		return &corev1.Event{}
+		if gvk.Version == "v1" {
+			return &corev1.Event{}, nil
+		}
 	case "LimitRange":
-		return &corev1.LimitRange{}
+		if gvk.Version == "v1" {
+			return &corev1.LimitRange{}, nil
+		}
 	case "Namespace":
-		return &corev1.Namespace{}
+		if gvk.Version == "v1" {
+			return &corev1.Namespace{}, nil
+		}
 	case "Node":
-		return &corev1.Node{}
+		if gvk.Version == "v1" {
+			return &corev1.Node{}, nil
+		}
 	case "PersistentVolume":
-		return &corev1.PersistentVolume{}
+		if gvk.Version == "v1" {
+			return &corev1.PersistentVolume{}, nil
+		}
 	case "PersistentVolumeClaim":
-		return &corev1.PersistentVolumeClaim{}
+		if gvk.Version == "v1" {
+			return &corev1.PersistentVolumeClaim{}, nil
+		}
 	case "Pod":
-		return &corev1.Pod{}
+		if gvk.Version == "v1" {
+			return &corev1.Pod{}, nil
+		}
 	case "PodTemplate":
-		return &corev1.PodTemplate{}
+		if gvk.Version == "v1" {
+			return &corev1.PodTemplate{}, nil
+		}
 	case "ReplicationController":
-		return &corev1.ReplicationController{}
+		if gvk.Version == "v1" {
+			return &corev1.ReplicationController{}, nil
+		}
 	case "ResourceQuota":
-		return &corev1.ResourceQuota{}
+		if gvk.Version == "v1" {
+			return &corev1.ResourceQuota{}, nil
+		}
 	case "Secret":
-		return &corev1.Secret{}
+		if gvk.Version == "v1" {
+			return &corev1.Secret{}, nil
+		}
 	case "Service":
-		return &corev1.Service{}
+		if gvk.Version == "v1" {
+			return &corev1.Service{}, nil
+		}
 	case "ServiceAccount":
-		return &corev1.ServiceAccount{}
-	case "Lease":
-		return &coordinationv1.Lease{}
-	case "DaemonSet":
-		return &appsv1.DaemonSet{}
-	case "Deployment":
-		return &appsv1.Deployment{}
-	case "ReplicaSet":
-		return &appsv1.ReplicaSet{}
-	case "StatefulSet":
-		return &appsv1.StatefulSet{}
-	case "EndpointSlice":
-		return &discoveryv1.EndpointSlice{}
-	case "MutatingWebhookConfiguration":
-		return &admissionregistrationv1.MutatingWebhookConfiguration{}
-	case "ValidatingWebhookConfiguration":
-		return &admissionregistrationv1.ValidatingWebhookConfiguration{}
+		if gvk.Version == "v1" {
+			return &corev1.ServiceAccount{}, nil
+		}
 	case "RangeAllocation":
-		return &corev1.RangeAllocation{}
-	case "ClusterRole":
-		return &rbacv1.ClusterRole{}
-	case "ClusterRoleBinding":
-		return &rbacv1.ClusterRoleBinding{}
-	case "Role":
-		return &rbacv1.Role{}
-	case "RoleBinding":
-		return &rbacv1.RoleBinding{}
-	case "ControllerRevision":
-		return &appsv1.ControllerRevision{}
-	case "StorageClass":
-		return &storagev1.StorageClass{}
-	case "VolumeAttachment":
-		return &storagev1.VolumeAttachment{}
-	case "CSINode":
-		return &storagev1.CSINode{}
-	case "PriorityClass":
-		return &schedulingv1.PriorityClass{}
-	case "FlowSchema":
-		return &flowcontrolv1.FlowSchema{}
-	case "PriorityLevelConfiguration":
-		return &flowcontrolv1.PriorityLevelConfiguration{}
-	default:
-		return nil
+		if gvk.Version == "v1" {
+			return &corev1.RangeAllocation{}, nil
+		}
 	}
+	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
+}
+
+func kindToObjectApps(gvk schema.GroupVersionKind) (runtime.Object, error) {
+	switch gvk.Kind {
+	case "DaemonSet":
+		if gvk.Version == "v1" {
+			return &appsv1.DaemonSet{}, nil
+		} else if gvk.Version == "v1beta2" {
+			return &appsv1beta2.DaemonSet{}, nil
+		}
+	case "Deployment":
+		if gvk.Version == "v1" {
+			return &appsv1.Deployment{}, nil
+		} else if gvk.Version == "v1beta2" {
+			return &appsv1beta2.Deployment{}, nil
+		}
+	case "ReplicaSet":
+		if gvk.Version == "v1" {
+			return &appsv1.ReplicaSet{}, nil
+		} else if gvk.Version == "v1beta2" {
+			return &appsv1beta2.ReplicaSet{}, nil
+		}
+	case "StatefulSet":
+		if gvk.Version == "v1" {
+			return &appsv1.StatefulSet{}, nil
+		} else if gvk.Version == "v1beta2" {
+			return &appsv1beta2.StatefulSet{}, nil
+		}
+	case "ControllerRevision":
+		if gvk.Version == "v1" {
+			return &appsv1.ControllerRevision{}, nil
+		} else if gvk.Version == "v1beta2" {
+			return &appsv1beta2.ControllerRevision{}, nil
+		}
+	}
+	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
+}
+
+func kindToObjectCoordination(gvk schema.GroupVersionKind) (runtime.Object, error) {
+	if gvk.Kind == "Lease" && gvk.Version == "v1" {
+		return &coordinationv1.Lease{}, nil
+	}
+	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
+}
+
+func kindToObjectDiscovery(gvk schema.GroupVersionKind) (runtime.Object, error) {
+	if gvk.Kind == "EndpointSlice" && gvk.Version == "v1" {
+		return &discoveryv1.EndpointSlice{}, nil
+	}
+	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
+}
+
+func kindToObjectAdmissionRegistration(gvk schema.GroupVersionKind) (runtime.Object, error) {
+	switch gvk.Kind {
+	case "MutatingWebhookConfiguration":
+		if gvk.Version == "v1" {
+			return &admissionregistrationv1.MutatingWebhookConfiguration{}, nil
+		}
+	case "ValidatingWebhookConfiguration":
+		if gvk.Version == "v1" {
+			return &admissionregistrationv1.ValidatingWebhookConfiguration{}, nil
+		}
+	}
+	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
+}
+
+func kindToObjectRbac(gvk schema.GroupVersionKind) (runtime.Object, error) {
+	switch gvk.Kind {
+	case "ClusterRole":
+		if gvk.Version == "v1" {
+			return &rbacv1.ClusterRole{}, nil
+		} else if gvk.Version == "v1beta1" {
+			return &rbacv1beta1.ClusterRole{}, nil
+		}
+	case "ClusterRoleBinding":
+		if gvk.Version == "v1" {
+			return &rbacv1.ClusterRoleBinding{}, nil
+		} else if gvk.Version == "v1beta1" {
+			return &rbacv1beta1.ClusterRoleBinding{}, nil
+		}
+	case "Role":
+		if gvk.Version == "v1" {
+			return &rbacv1.Role{}, nil
+		} else if gvk.Version == "v1beta1" {
+			return &rbacv1beta1.Role{}, nil
+		}
+	case "RoleBinding":
+		if gvk.Version == "v1" {
+			return &rbacv1.RoleBinding{}, nil
+		} else if gvk.Version == "v1beta1" {
+			return &rbacv1beta1.RoleBinding{}, nil
+		}
+	}
+	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
+}
+
+func kindToObjectScheduling(gvk schema.GroupVersionKind) (runtime.Object, error) {
+	if gvk.Kind == "PriorityClass" && gvk.Version == "v1" {
+		return &schedulingv1.PriorityClass{}, nil
+	}
+	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
+}
+
+func kindToObjectFlowControl(gvk schema.GroupVersionKind) (runtime.Object, error) {
+	switch gvk.Kind {
+	case "FlowSchema":
+		if gvk.Version == "v1" {
+			return &flowcontrolv1.FlowSchema{}, nil
+		}
+	case "PriorityLevelConfiguration":
+		if gvk.Version == "v1" {
+			return &flowcontrolv1.PriorityLevelConfiguration{}, nil
+		}
+	}
+	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
+}
+
+func kindToObjectStorage(gvk schema.GroupVersionKind) (runtime.Object, error) {
+	switch gvk.Kind {
+	case "StorageClass":
+		if gvk.Version == "v1" {
+			return &storagev1.StorageClass{}, nil
+		}
+	case "VolumeAttachment":
+		if gvk.Version == "v1" {
+			return &storagev1.VolumeAttachment{}, nil
+		}
+	case "CSINode":
+		if gvk.Version == "v1" {
+			return &storagev1.CSINode{}, nil
+		}
+	}
+	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
+}
+
+func kindToObject(gvk schema.GroupVersionKind) (runtime.Object, error) {
+	switch gvk.Group {
+	case corev1.GroupName:
+		return kindToObjectCore(gvk)
+	case appsv1.GroupName:
+		return kindToObjectApps(gvk)
+	case coordinationv1.GroupName:
+		return kindToObjectCoordination(gvk)
+	case discoveryv1.GroupName:
+		return kindToObjectDiscovery(gvk)
+	case admissionregistrationv1.GroupName:
+		return kindToObjectAdmissionRegistration(gvk)
+	case rbacv1.GroupName:
+		return kindToObjectRbac(gvk)
+	case schedulingv1.GroupName:
+		return kindToObjectScheduling(gvk)
+	case flowcontrolv1.GroupName:
+		return kindToObjectFlowControl(gvk)
+	case storagev1.GroupName:
+		return kindToObjectStorage(gvk)
+	default:
+		return nil, fmt.Errorf("unsupported group %s", gvk.Group)
+	}
+
 }
 
 func iterateEtcdKeys(dbPath, outputPath string, limit uint64) error {
