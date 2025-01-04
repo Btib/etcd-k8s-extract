@@ -35,14 +35,14 @@ import (
 
 func WriteResourceToFile(kuberegistryPath string, data []byte, ret mvccpb.KeyValue) error {
 	keyPath := strings.ReplaceAll(string(ret.Key), "/registry/", "")
-	subDirectory := path.Join(kuberegistryPath, keyPath)
+	subDirectory := filepath.Join(kuberegistryPath, keyPath)
 	err := os.MkdirAll(subDirectory, 0755)
 	if err != nil {
 		return fmt.Errorf("failed make directory: %w", err)
 	}
 
 	versionFileName := fmt.Sprintf("%d-%d.yaml", ret.Version, ret.ModRevision)
-	err = os.WriteFile(path.Join(subDirectory, versionFileName), data, 0644)
+	err = os.WriteFile(filepath.Join(subDirectory, versionFileName), data, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
