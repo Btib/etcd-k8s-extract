@@ -14,6 +14,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 
+	batchv1 "k8s.io/api/batch/v1"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
@@ -333,6 +334,17 @@ func kindToObjectNetworking(gvk schema.GroupVersionKind) (runtime.Object, error)
 	}
 	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
 }
+
+func kindToObjectBatch(gvk schema.GroupVersionKind) (runtime.Object, error) {
+	switch gvk.Kind {
+	case "CronJob":
+		if gvk.Version == "v1" {
+			return &batchv1.CronJob{}, nil
+		}
+	}
+	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
+}
+
 func kindToObject(gvk schema.GroupVersionKind) (runtime.Object, error) {
 	switch gvk.Group {
 	case corev1.GroupName:
@@ -355,6 +367,8 @@ func kindToObject(gvk schema.GroupVersionKind) (runtime.Object, error) {
 		return kindToObjectStorage(gvk)
 	case networkingv1.GroupName:
 		return kindToObjectNetworking(gvk)
+	case batchv1.GroupName:
+		return kindToObjectBatch(gvk)
 	default:
 		return nil, fmt.Errorf("unsupported group %s", gvk.Group)
 	}
