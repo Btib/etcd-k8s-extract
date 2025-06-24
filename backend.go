@@ -14,6 +14,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	batchv1 "k8s.io/api/batch/v1"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -345,6 +346,16 @@ func kindToObjectBatch(gvk schema.GroupVersionKind) (runtime.Object, error) {
 	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
 }
 
+func kindToObjectAutoscaling(gvk schema.GroupVersionKind) (runtime.Object, error) {
+	switch gvk.Kind {
+	case "HorizontalPodAutoscaler":
+		if gvk.Version == "v2" {
+			return &autoscalingv2.HorizontalPodAutoscaler{}, nil
+		}
+	}
+	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
+}
+
 func kindToObject(gvk schema.GroupVersionKind) (runtime.Object, error) {
 	switch gvk.Group {
 	case corev1.GroupName:
@@ -369,6 +380,8 @@ func kindToObject(gvk schema.GroupVersionKind) (runtime.Object, error) {
 		return kindToObjectNetworking(gvk)
 	case batchv1.GroupName:
 		return kindToObjectBatch(gvk)
+	case autoscalingv2.GroupName:
+		return kindToObjectAutoscaling(gvk)
 	default:
 		return nil, fmt.Errorf("unsupported group %s", gvk.Group)
 	}
