@@ -18,6 +18,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	flowcontrolv1 "k8s.io/api/flowcontrol/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
@@ -319,6 +320,19 @@ func kindToObjectStorage(gvk schema.GroupVersionKind) (runtime.Object, error) {
 	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
 }
 
+func kindToObjectNetworking(gvk schema.GroupVersionKind) (runtime.Object, error) {
+	switch gvk.Kind {
+	case "Ingress":
+		if gvk.Version == "v1" {
+			return &networkingv1.Ingress{}, nil
+		}
+	case "NetworkPolicy":
+		if gvk.Version == "v1" {
+			return &networkingv1.NetworkPolicy{}, nil
+		}
+	}
+	return nil, fmt.Errorf("unsupported version %s for kind %s", gvk.Version, gvk.Kind)
+}
 func kindToObject(gvk schema.GroupVersionKind) (runtime.Object, error) {
 	switch gvk.Group {
 	case corev1.GroupName:
@@ -339,6 +353,8 @@ func kindToObject(gvk schema.GroupVersionKind) (runtime.Object, error) {
 		return kindToObjectFlowControl(gvk)
 	case storagev1.GroupName:
 		return kindToObjectStorage(gvk)
+	case networkingv1.GroupName:
+		return kindToObjectNetworking(gvk)
 	default:
 		return nil, fmt.Errorf("unsupported group %s", gvk.Group)
 	}
