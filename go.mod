@@ -1,4 +1,4 @@
-module github.com/zawachte/etcd-k8s-extract
+module github.com/Btib/etcd-k8s-extract
 
 go 1.23.0
 
